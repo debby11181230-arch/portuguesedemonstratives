@@ -1,0 +1,57 @@
+@import url('https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Noto+Sans+TC:wght@400;500;700&family=Gaegu:wght@400;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Noto Sans TC", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "ZCOOL KuaiLe", cursive;
+  --font-crayon: "Gaegu", cursive;
+}
+
+body {
+  background-color: #fffdfa;
+  background-image: radial-gradient(#f0f0f0 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.crayon-border {
+  border: 3px solid #4a4a4a;
+  border-radius: 255px 15px 225px 15px/15px 225px 15px 255px;
+}
+
+.crayon-card {
+  @apply bg-white p-6 shadow-lg;
+  border: 3px solid currentColor;
+  border-radius: 2% 6% 5% 4% / 1% 1% 2% 4%;
+  position: relative;
+}
+
+.crayon-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(255, 255, 255, 0.1);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.paper-texture {
+  background-image: url("https://www.transparenttextures.com/patterns/paper-fibers.png");
+}
+
+.hand-drawn-line {
+  height: 4px;
+  background: currentColor;
+  border-radius: 50%;
+  width: 100%;
+  opacity: 0.6;
+}
+
+.sketch-button {
+  @apply px-6 py-3 font-bold transition-all active:scale-95;
+  border: 2px solid currentColor;
+  border-radius: 255px 15px 225px 15px/15px 225px 15px 255px;
+}
+
+.markdown-body {
+  @apply text-gray-800 leading-relaxed font-crayon text-xl;
+}
