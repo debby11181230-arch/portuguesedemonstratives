@@ -1,10 +1,6 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import confetti from 'canvas-confetti';
 import { 
   ChevronRight, 
   ChevronLeft, 
@@ -15,7 +11,11 @@ import {
   Star,
   Info,
   RotateCcw,
-  MapPin
+  MapPin,
+  Sparkles,
+  Heart,
+  Music,
+  Palette
 } from 'lucide-react';
 
 // Pokemon IDs for visual aids
@@ -30,6 +30,28 @@ const POKEMON = {
 
 const getPokemonImg = (id: number) => `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`;
 
+// Floating Emoji Component
+const FloatingEmoji = ({ emoji, delay = 0, x = 0 }: { emoji: string, delay?: number, x?: number }) => (
+  <motion.div
+    initial={{ y: '110vh', opacity: 0 }}
+    animate={{ 
+      y: '-10vh', 
+      opacity: [0, 1, 1, 0],
+      x: [x - 20, x + 20, x - 20]
+    }}
+    transition={{ 
+      duration: 10, 
+      repeat: Infinity, 
+      delay,
+      ease: "linear"
+    }}
+    className="fixed text-4xl pointer-events-none z-0 select-none"
+    style={{ left: `${x}%` }}
+  >
+    {emoji}
+  </motion.div>
+);
+
 interface Question {
   id: number;
   text: string;
@@ -41,41 +63,41 @@ interface Question {
 const SECTION_1_QUESTIONS: Question[] = [
   {
     id: 1,
-    text: "當皮卡丘就在你腳邊（靠近說話者）時，你應該說：",
+    text: "當皮卡丘就在你腳邊（靠近說話者）時，你應該說： ⚡",
     options: ["Este Pikachu", "Esse Pikachu", "Aquele Pikachu"],
     correctAnswer: 0,
-    explanation: "Este 用於靠近說話者（我）的東西。就像皮卡丘就在你懷裡一樣！"
+    explanation: "Este 用於靠近說話者（我）的東西。就像皮卡丘就在你懷裡一樣！ 🤗"
   },
   {
     id: 2,
-    text: "當傑尼龜在你的朋友（聽話者）身邊時，你應該說：",
+    text: "當傑尼龜在你的朋友（聽話者）身邊時，你應該說： 🐢",
     options: ["Esta Squirtle", "Essa Squirtle", "Aquela Squirtle"],
     correctAnswer: 1,
-    explanation: "Essa 用於靠近聽話者（你對面的人）的東西。傑尼龜在朋友那邊喔！"
+    explanation: "Essa 用於靠近聽話者（你對面的人）的東西。傑尼龜在朋友那邊喔！ 🌊"
   },
   {
     id: 3,
-    text: "遠處山頭有一隻小火龍，離你和朋友都很遠，該說：",
+    text: "遠處山頭有一隻小火龍，離你和朋友都很遠，該說： 🔥",
     options: ["Este Charmander", "Esse Charmander", "Aquele Charmander"],
     correctAnswer: 2,
-    explanation: "Aquele 用於遠離雙方的東西。小火龍在好遠好遠的地方！"
+    explanation: "Aquele 用於遠離雙方的東西。小火龍在好遠好遠的地方！ ⛰️"
   }
 ];
 
 const SECTION_2_QUESTIONS: Question[] = [
   {
     id: 4,
-    text: "你想問「這是什麼？」（指著自己手裡神祕的東西），該說：",
+    text: "你想問「這是什麼？」（指著自己手裡神祕的東西），該說： ❓",
     options: ["O que é isso?", "O que é isto?", "O que é aquilo?"],
     correctAnswer: 1,
-    explanation: "Isto 指靠近說話者的不特定東西。因為在你自己手裡，所以用 isto！"
+    explanation: "Isto 指靠近說話者的不特定東西。因為在你自己手裡，所以用 isto！ 🎁"
   },
   {
     id: 5,
-    text: "朋友剛說了一件讓你驚訝的事，你想說「那件事太棒了！」，該用：",
+    text: "朋友剛說了一件讓你驚訝的事，你想說「那件事太棒了！」，該用： 😲",
     options: ["Isto foi incrível!", "Isso foi incrível!", "Aquilo foi incrível!"],
     correctAnswer: 1,
-    explanation: "Isso 指代聽話者剛說過的話或發生的事。因為是朋友說的，所以用 isso！"
+    explanation: "Isso 指代聽話者剛說過的話或發生的事。因為是朋友說的，所以用 isso！ ✨"
   }
 ];
 
@@ -87,32 +109,55 @@ export default function App() {
   const handleAnswer = (questionId: number, optionIndex: number) => {
     setAnswers(prev => ({ ...prev, [questionId]: optionIndex }));
     setShowFeedback(prev => ({ ...prev, [questionId]: true }));
+    
+    const isCorrect = optionIndex === (SECTION_1_QUESTIONS.find(q => q.id === questionId) || SECTION_2_QUESTIONS.find(q => q.id === questionId))?.correctAnswer;
+    
+    if (isCorrect) {
+      confetti({
+        particleCount: 40,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#FFD700', '#FFA500', '#FF4500']
+      });
+    }
   };
 
   const steps = [
     // Step 0: Intro
     {
-      title: "歡迎來到蠟筆葡語教室！",
+      title: "🌈 歡迎來到蠟筆葡語教室！ ✨",
       content: (
         <div className="space-y-6 text-center">
           <motion.div 
-            animate={{ rotate: [0, 5, -5, 0] }}
+            animate={{ 
+              rotate: [0, 5, -5, 0],
+              scale: [1, 1.05, 1]
+            }}
             transition={{ repeat: Infinity, duration: 3 }}
-            className="flex justify-center"
+            className="flex justify-center relative"
           >
             <img 
               src={getPokemonImg(POKEMON.PIKACHU)} 
               alt="Pikachu" 
-              className="w-56 h-56 drop-shadow-[10px_10px_0px_rgba(255,200,0,0.3)]"
+              className="w-56 h-56 drop-shadow-[10px_10px_0px_rgba(255,200,0,0.3)] z-10"
               referrerPolicy="no-referrer"
             />
+            <motion.div 
+              animate={{ opacity: [0, 1, 0], scale: [0.5, 1.5, 0.5] }}
+              transition={{ repeat: Infinity, duration: 2 }}
+              className="absolute top-0 right-0 text-4xl"
+            >
+              ⚡
+            </motion.div>
           </motion.div>
           <div className="crayon-card text-orange-600 border-orange-400 bg-orange-50/30">
-            <h2 className="text-3xl font-display mb-4">今天的主角：指示代詞 (Demonstrativos)</h2>
+            <h2 className="text-3xl font-display mb-4 flex items-center justify-center gap-2">
+              <Palette className="text-orange-500" /> 今天的主角：指示代詞 🖍️
+            </h2>
             <p className="text-xl font-crayon leading-relaxed">
-              哈囉！小訓練家們！在葡萄牙語裡，要說「這個」還是「那個」，
-              全看東西離你有多遠喔！就像我們在畫畫時，蠟筆是在你手裡、在朋友桌上，還是在遠處的架子上呢？
-              讓我們跟著寶可夢一起學習吧！
+              哈囉！小訓練家們！ 🎒 在葡萄牙語裡，要說「這個」還是「那個」，
+              全看東西離你有多遠喔！ 📏 就像我們在畫畫時，蠟筆是在你手裡、在朋友桌上，還是在遠處的架子上呢？
+              讓我們跟著寶可夢一起快樂學習吧！ 🎨✨
             </p>
           </div>
         </div>
@@ -120,76 +165,88 @@ export default function App() {
     },
     // Step 1: Basic Near/Mid/Far
     {
-      title: "1. 距離的秘密 (Segredos da Distância)",
+      title: "1. 距離的秘密 🗺️ (Segredos da Distância)",
       content: (
         <div className="space-y-8">
           <div className="grid grid-cols-1 gap-6">
-            <motion.div whileHover={{ scale: 1.02 }} className="crayon-card text-blue-600 border-blue-400 bg-blue-50/30">
-              <div className="flex items-center gap-4">
-                <img src={getPokemonImg(POKEMON.SQUIRTLE)} alt="Near" className="w-24 h-24" referrerPolicy="no-referrer" />
-                <div>
+            <motion.div 
+              whileHover={{ scale: 1.02, rotate: 1 }} 
+              className="crayon-card text-blue-600 border-blue-400 bg-blue-50/30 overflow-hidden"
+            >
+              <div className="flex items-center gap-4 relative">
+                <img src={getPokemonImg(POKEMON.SQUIRTLE)} alt="Near" className="w-24 h-24 z-10" referrerPolicy="no-referrer" />
+                <div className="z-10">
                   <h3 className="text-2xl font-bold mb-1 flex items-center gap-2">
-                    <MapPin size={24} /> 近 (Aqui / Perto de mim)
+                    <MapPin size={24} /> 近 (Aqui / Perto de mim) 📍
                   </h3>
-                  <p className="text-lg opacity-80 mb-2">就在說話者（我）的身邊，手摸得到的地方！</p>
+                  <p className="text-lg opacity-80 mb-2">就在說話者（我）的身邊，手摸得到的地方！ 🤗</p>
                   <div className="grid grid-cols-2 gap-2 font-bold text-xl">
                     <span className="bg-white/50 px-2 py-1 rounded">este / esta → 這個</span>
                     <span className="bg-white/50 px-2 py-1 rounded">estes / estas → 這些</span>
                   </div>
                 </div>
+                <div className="absolute -right-4 -bottom-4 text-6xl opacity-20 rotate-12">🌊</div>
               </div>
             </motion.div>
 
-            <motion.div whileHover={{ scale: 1.02 }} className="crayon-card text-green-600 border-green-400 bg-green-50/30">
-              <div className="flex items-center gap-4">
-                <img src={getPokemonImg(POKEMON.BULBASAUR)} alt="Mid" className="w-24 h-24" referrerPolicy="no-referrer" />
-                <div>
+            <motion.div 
+              whileHover={{ scale: 1.02, rotate: -1 }} 
+              className="crayon-card text-green-600 border-green-400 bg-green-50/30 overflow-hidden"
+            >
+              <div className="flex items-center gap-4 relative">
+                <img src={getPokemonImg(POKEMON.BULBASAUR)} alt="Mid" className="w-24 h-24 z-10" referrerPolicy="no-referrer" />
+                <div className="z-10">
                   <h3 className="text-2xl font-bold mb-1 flex items-center gap-2">
-                    <MapPin size={24} /> 稍遠 (Aí / Perto de ti)
+                    <MapPin size={24} /> 稍遠 (Aí / Perto de ti) 👣
                   </h3>
-                  <p className="text-lg opacity-80 mb-2">在聽話者（你）的身邊，離我有一點距離。</p>
+                  <p className="text-lg opacity-80 mb-2">在聽話者（你）的身邊，離我有一點距離。 🤝</p>
                   <div className="grid grid-cols-2 gap-2 font-bold text-xl">
                     <span className="bg-white/50 px-2 py-1 rounded">esse / essa → 那個</span>
                     <span className="bg-white/50 px-2 py-1 rounded">esses / essas → 那些</span>
                   </div>
                 </div>
+                <div className="absolute -right-4 -bottom-4 text-6xl opacity-20 -rotate-12">🍃</div>
               </div>
             </motion.div>
 
-            <motion.div whileHover={{ scale: 1.02 }} className="crayon-card text-red-600 border-red-400 bg-red-50/30">
-              <div className="flex items-center gap-4">
-                <img src={getPokemonImg(POKEMON.CHARMANDER)} alt="Far" className="w-24 h-24" referrerPolicy="no-referrer" />
-                <div>
+            <motion.div 
+              whileHover={{ scale: 1.02, rotate: 1 }} 
+              className="crayon-card text-red-600 border-red-400 bg-red-50/30 overflow-hidden"
+            >
+              <div className="flex items-center gap-4 relative">
+                <img src={getPokemonImg(POKEMON.CHARMANDER)} alt="Far" className="w-24 h-24 z-10" referrerPolicy="no-referrer" />
+                <div className="z-10">
                   <h3 className="text-2xl font-bold mb-1 flex items-center gap-2">
-                    <MapPin size={24} /> 遠 (Ali / Longe de nós)
+                    <MapPin size={24} /> 遠 (Ali / Longe de nós) 🔭
                   </h3>
-                  <p className="text-lg opacity-80 mb-2">離我們兩個人都很遠，要用手指指很遠的地方！</p>
+                  <p className="text-lg opacity-80 mb-2">離我們兩個人都很遠，要用手指指很遠的地方！ ⛰️</p>
                   <div className="grid grid-cols-2 gap-2 font-bold text-xl">
                     <span className="bg-white/50 px-2 py-1 rounded">aquele / aquela → 那個</span>
                     <span className="bg-white/50 px-2 py-1 rounded">aqueles / aquelas → 那些</span>
                   </div>
                 </div>
+                <div className="absolute -right-4 -bottom-4 text-6xl opacity-20 rotate-45">🔥</div>
               </div>
             </motion.div>
           </div>
 
-          <div className="crayon-card text-indigo-600 border-indigo-400 bg-white">
+          <div className="crayon-card text-indigo-600 border-indigo-400 bg-white shadow-xl">
             <h4 className="text-2xl font-bold mb-4 flex items-center gap-2">
-              <BookOpen size={24} /> 📚 例句對照 (Exemplos)
+              <BookOpen size={24} /> 📚 例句對照 (Exemplos) 📖
             </h4>
             <div className="space-y-4 text-xl font-crayon">
-              <div className="p-3 bg-indigo-50 rounded-lg border-2 border-dashed border-indigo-200">
-                <p className="font-bold">Esta mochila é tua? (近)</p>
+              <motion.div whileHover={{ x: 10 }} className="p-3 bg-indigo-50 rounded-lg border-2 border-dashed border-indigo-200">
+                <p className="font-bold">Esta mochila é tua? (近) 🎒</p>
                 <p className="text-gray-600">這個書包是你的嗎？</p>
-              </div>
-              <div className="p-3 bg-indigo-50 rounded-lg border-2 border-dashed border-indigo-200">
-                <p className="font-bold">Essa mochila é minha. (稍遠)</p>
+              </motion.div>
+              <motion.div whileHover={{ x: 10 }} className="p-3 bg-indigo-50 rounded-lg border-2 border-dashed border-indigo-200">
+                <p className="font-bold">Essa mochila é minha. (稍遠) 🎒</p>
                 <p className="text-gray-600">那個書包是我的。</p>
-              </div>
-              <div className="p-3 bg-indigo-50 rounded-lg border-2 border-dashed border-indigo-200">
-                <p className="font-bold">Aquele lápis é teu? (遠)</p>
+              </motion.div>
+              <motion.div whileHover={{ x: 10 }} className="p-3 bg-indigo-50 rounded-lg border-2 border-dashed border-indigo-200">
+                <p className="font-bold">Aquele lápis é teu? (遠) ✏️</p>
                 <p className="text-gray-600">那支鉛筆是你的嗎？</p>
-              </div>
+              </motion.div>
             </div>
           </div>
         </div>
@@ -197,13 +254,13 @@ export default function App() {
     },
     // Step 2: Practice 1
     {
-      title: "📝 練習題：第一回合 (Exercícios 1)",
+      title: "📝 練習題：第一回合 ✏️",
       content: (
         <div className="space-y-8">
           {SECTION_1_QUESTIONS.map((q) => (
             <div key={q.id} className="crayon-card text-slate-700 border-slate-300">
               <h3 className="text-2xl font-bold mb-4 flex items-center gap-3">
-                <span className="bg-yellow-400 text-white w-10 h-10 rounded-full flex items-center justify-center text-xl crayon-border border-yellow-600">{q.id}</span>
+                <span className="bg-yellow-400 text-white w-10 h-10 rounded-full flex items-center justify-center text-xl crayon-border border-yellow-600 shadow-md">{q.id}</span>
                 {q.text}
               </h3>
               <div className="grid grid-cols-1 gap-3">
@@ -212,10 +269,10 @@ export default function App() {
                     key={idx}
                     onClick={() => handleAnswer(q.id, idx)}
                     disabled={showFeedback[q.id]}
-                    className={`sketch-button text-xl ${
+                    className={`sketch-button text-xl shadow-sm ${
                       answers[q.id] === idx 
                         ? (idx === q.correctAnswer ? 'bg-green-100 text-green-700 border-green-500' : 'bg-red-100 text-red-700 border-red-500')
-                        : 'bg-white text-slate-600 border-slate-200 hover:border-indigo-400'
+                        : 'bg-white text-slate-600 border-slate-200 hover:border-indigo-400 hover:bg-slate-50'
                     } ${showFeedback[q.id] && idx === q.correctAnswer ? 'border-green-500 bg-green-50' : ''}`}
                   >
                     <div className="flex items-center justify-between">
@@ -239,13 +296,16 @@ export default function App() {
     },
     // Step 3: Neutral Demonstratives
     {
-      title: "📘 什麼是 isto / isso / aquilo？ (Invariáveis)",
+      title: "📘 什麼是 isto / isso / aquilo？ 🔮",
       content: (
         <div className="space-y-6">
           <div className="flex justify-center">
             <motion.img 
-              animate={{ y: [0, -10, 0] }}
-              transition={{ repeat: Infinity, duration: 2 }}
+              animate={{ 
+                y: [0, -15, 0],
+                rotate: [0, 5, -5, 0]
+              }}
+              transition={{ repeat: Infinity, duration: 2.5 }}
               src={getPokemonImg(POKEMON.EEVEE)} 
               alt="Eevee" 
               className="w-44 h-44 drop-shadow-lg"
@@ -254,37 +314,42 @@ export default function App() {
           </div>
           <div className="crayon-card text-purple-600 border-purple-400 bg-purple-50/30">
             <p className="text-2xl font-crayon mb-4">
-              它們表示<strong>「這個／那個（不特定）」</strong>的概念，最重要的是：<strong>它們不接名詞！</strong>
+              它們表示<strong>「這個／那個（不特定）」</strong>的概念，最重要的是：<strong>它們不接名詞！</strong> 🚫📖
             </p>
             <div className="space-y-3 font-bold text-xl">
-              <div className="bg-white/60 p-3 rounded-xl border-2 border-dashed border-purple-200">
-                <strong>isto</strong> → 這個 (靠近我) <span className="text-gray-400 text-lg font-normal">| Isto é meu. (這是我的)</span>
-              </div>
-              <div className="bg-white/60 p-3 rounded-xl border-2 border-dashed border-purple-200">
-                <strong>isso</strong> → 那個 (靠近你) <span className="text-gray-400 text-lg font-normal">| Isso é teu. (那是你的)</span>
-              </div>
-              <div className="bg-white/60 p-3 rounded-xl border-2 border-dashed border-purple-200">
-                <strong>aquilo</strong> → 那個 (好遠) <span className="text-gray-400 text-lg font-normal">| O que é aquilo? (那邊那是啥？)</span>
-              </div>
+              <motion.div whileHover={{ scale: 1.02 }} className="bg-white/60 p-3 rounded-xl border-2 border-dashed border-purple-200 flex items-center justify-between">
+                <span><strong>isto</strong> → 這個 (靠近我)</span>
+                <span className="text-gray-400 text-lg font-normal italic">Isto é meu. 🎁</span>
+              </motion.div>
+              <motion.div whileHover={{ scale: 1.02 }} className="bg-white/60 p-3 rounded-xl border-2 border-dashed border-purple-200 flex items-center justify-between">
+                <span><strong>isso</strong> → 那個 (靠近你)</span>
+                <span className="text-gray-400 text-lg font-normal italic">Isso é teu. 🤝</span>
+              </motion.div>
+              <motion.div whileHover={{ scale: 1.02 }} className="bg-white/60 p-3 rounded-xl border-2 border-dashed border-purple-200 flex items-center justify-between">
+                <span><strong>aquilo</strong> → 那個 (好遠)</span>
+                <span className="text-gray-400 text-lg font-normal italic">O que é aquilo? 🔭</span>
+              </motion.div>
             </div>
           </div>
 
           <div className="crayon-card text-pink-600 border-pink-400 bg-white">
             <h4 className="text-2xl font-bold mb-4 flex items-center gap-2">
-              <Star size={24} className="text-yellow-500" /> 什麼時候用？ (Quando usar?)
+              <Star size={24} className="text-yellow-500" /> 什麼時候用？ 💡
             </h4>
             <div className="space-y-6 text-xl font-crayon">
-              <div className="p-4 bg-pink-50 rounded-xl border-2 border-pink-100">
-                <h5 className="font-bold mb-2">1. 指不確定的東西 (Coisas incertas)</h5>
+              <div className="p-4 bg-pink-50 rounded-xl border-2 border-pink-100 relative overflow-hidden">
+                <h5 className="font-bold mb-2">1. 指不確定的東西 ❓</h5>
                 <p><strong>O que é isto?</strong> → 這是什麼？ (就在我手裡)</p>
                 <p><strong>O que é isso?</strong> → 那是什麼？ (在你桌上)</p>
                 <p><strong>O que é aquilo?</strong> → 那邊那個是什麼？ (在遠方)</p>
+                <div className="absolute -right-2 -bottom-2 text-4xl opacity-10">❓</div>
               </div>
-              <div className="p-4 bg-pink-50 rounded-xl border-2 border-pink-100">
-                <h5 className="font-bold mb-2">2. 指整件事情 (Ações / Ideias)</h5>
-                <p><strong>Isto é importante.</strong> → 這件事很重要。</p>
+              <div className="p-4 bg-pink-50 rounded-xl border-2 border-pink-100 relative overflow-hidden">
+                <h5 className="font-bold mb-2">2. 指整件事情 💭</h5>
+                <p><strong>Isto é important.</strong> → 這件事很重要。</p>
                 <p><strong>Não digas isso!</strong> → 別說那種話！ (你剛說的話)</p>
-                <p><strong>Aquilo foi incrível!</strong> → 那件事太棒了！ (很久以前或遠處發生的)</p>
+                <p><strong>Aquilo foi incrível!</strong> → 那件事太棒了！ ✨</p>
+                <div className="absolute -right-2 -bottom-2 text-4xl opacity-10">💭</div>
               </div>
             </div>
           </div>
@@ -293,49 +358,54 @@ export default function App() {
     },
     // Step 4: Difference Table
     {
-      title: "📝 差別在哪裡？ (Qual a diferença?)",
+      title: "📝 差別在哪裡？ ⚖️",
       content: (
         <div className="space-y-6">
-          <div className="crayon-card border-slate-400 p-0 overflow-hidden">
+          <div className="crayon-card border-slate-400 p-0 overflow-hidden shadow-xl">
             <div className="bg-slate-700 text-white p-4 grid grid-cols-3 font-bold text-xl">
-              <div>類型 (Tipo)</div>
-              <div>用法 (Uso)</div>
-              <div>例子 (Exemplo)</div>
+              <div>類型 🏷️</div>
+              <div>用法 🛠️</div>
+              <div>例子 💡</div>
             </div>
-            <div className="p-4 grid grid-cols-3 gap-4 text-lg items-center border-b border-slate-100">
+            <div className="p-4 grid grid-cols-3 gap-4 text-lg items-center border-b border-slate-100 bg-blue-50/20">
               <div className="font-bold text-blue-600">este / essa / aquele</div>
               <div className="text-gray-600">要跟<strong>名詞</strong>一起用</div>
-              <div className="italic text-sm">este livro / essa mochila</div>
+              <div className="italic text-sm">este livro 📖</div>
             </div>
-            <div className="p-4 grid grid-cols-3 gap-4 text-lg items-center">
+            <div className="p-4 grid grid-cols-3 gap-4 text-lg items-center bg-purple-50/20">
               <div className="font-bold text-purple-600">isto / isso / aquilo</div>
               <div className="text-gray-600"><strong>單獨使用</strong>，指代事情</div>
-              <div className="italic text-sm">isto é bom / o que é isso?</div>
+              <div className="italic text-sm">isto é bom ✨</div>
             </div>
           </div>
           
-          <div className="crayon-card text-emerald-600 border-emerald-400 bg-emerald-50/30 flex items-center gap-6">
+          <motion.div 
+            whileHover={{ scale: 1.02 }}
+            className="crayon-card text-emerald-600 border-emerald-400 bg-emerald-50/30 flex items-center gap-6"
+          >
             <img src={getPokemonImg(POKEMON.MEW)} alt="Mew" className="w-24 h-24" referrerPolicy="no-referrer" />
             <div>
-              <h4 className="text-2xl font-bold mb-2">💡 老師的小補充</h4>
+              <h4 className="text-2xl font-bold mb-2 flex items-center gap-2">
+                <Sparkles size={24} /> 老師的小補充 💡
+              </h4>
               <p className="text-xl font-crayon">
                 如果你知道東西的名字（如：書、筆），就用 <strong>este/esse/aquele</strong>。<br />
-                如果你不知道那是甚麼，或者是在講「一件事」，就用 <strong>isto/isso/aquilo</strong>！
+                如果你不知道那是甚麼，或者是在講「一件事」，就用 <strong>isto/isso/aquilo</strong>！ 🌟
               </p>
             </div>
-          </div>
+          </motion.div>
         </div>
       )
     },
     // Step 5: Practice 2
     {
-      title: "📝 練習題：第二回合 (Exercícios 2)",
+      title: "📝 練習題：第二回合 🔮",
       content: (
         <div className="space-y-8">
           {SECTION_2_QUESTIONS.map((q) => (
             <div key={q.id} className="crayon-card text-slate-700 border-slate-300">
               <h3 className="text-2xl font-bold mb-4 flex items-center gap-3">
-                <span className="bg-purple-500 text-white w-10 h-10 rounded-full flex items-center justify-center text-xl crayon-border border-purple-700">{q.id}</span>
+                <span className="bg-purple-500 text-white w-10 h-10 rounded-full flex items-center justify-center text-xl crayon-border border-purple-700 shadow-md">{q.id}</span>
                 {q.text}
               </h3>
               <div className="grid grid-cols-1 gap-3">
@@ -344,10 +414,10 @@ export default function App() {
                     key={idx}
                     onClick={() => handleAnswer(q.id, idx)}
                     disabled={showFeedback[q.id]}
-                    className={`sketch-button text-xl ${
+                    className={`sketch-button text-xl shadow-sm ${
                       answers[q.id] === idx 
                         ? (idx === q.correctAnswer ? 'bg-green-100 text-green-700 border-green-500' : 'bg-red-100 text-red-700 border-red-500')
-                        : 'bg-white text-slate-600 border-slate-200 hover:border-purple-400'
+                        : 'bg-white text-slate-600 border-slate-200 hover:border-purple-400 hover:bg-slate-50'
                     } ${showFeedback[q.id] && idx === q.correctAnswer ? 'border-green-500 bg-green-50' : ''}`}
                   >
                     <div className="flex items-center justify-between">
@@ -371,43 +441,51 @@ export default function App() {
     },
     // Step 6: Final Summary
     {
-      title: "🎯 學習大總結 (Resumo Final)",
+      title: "🎯 學習大總結 🏆 (Resumo Final)",
       content: (
         <div className="space-y-8 text-center">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="crayon-card text-blue-600 border-blue-400 bg-blue-50/50">
+            <motion.div whileHover={{ y: -10 }} className="crayon-card text-blue-600 border-blue-400 bg-blue-50/50">
               <h3 className="text-2xl font-bold mb-2">este / esta</h3>
               <div className="hand-drawn-line mb-2" />
-              <p className="text-2xl font-display">近 (Aqui)</p>
-              <p className="text-lg">就在我身邊</p>
-            </div>
-            <div className="crayon-card text-green-600 border-green-400 bg-green-50/50">
+              <p className="text-2xl font-display">近 📍 (Aqui)</p>
+              <p className="text-lg">就在我身邊 🤗</p>
+            </motion.div>
+            <motion.div whileHover={{ y: -10 }} className="crayon-card text-green-600 border-green-400 bg-green-50/50">
               <h3 className="text-2xl font-bold mb-2">esse / essa</h3>
               <div className="hand-drawn-line mb-2" />
-              <p className="text-2xl font-display">稍遠 (Aí)</p>
-              <p className="text-lg">在你身邊</p>
-            </div>
-            <div className="crayon-card text-red-600 border-red-400 bg-red-50/50">
+              <p className="text-2xl font-display">稍遠 👣 (Aí)</p>
+              <p className="text-lg">在你身邊 🤝</p>
+            </motion.div>
+            <motion.div whileHover={{ y: -10 }} className="crayon-card text-red-600 border-red-400 bg-red-50/50">
               <h3 className="text-2xl font-bold mb-2">aquele / aquela</h3>
               <div className="hand-drawn-line mb-2" />
-              <p className="text-2xl font-display">遠 (Ali)</p>
-              <p className="text-lg">離我們都很遠</p>
-            </div>
+              <p className="text-2xl font-display">遠 🔭 (Ali)</p>
+              <p className="text-lg">離我們都很遠 ⛰️</p>
+            </motion.div>
           </div>
           
-          <div className="crayon-card text-purple-700 border-purple-500 bg-purple-50 p-10">
-            <h3 className="text-3xl font-bold mb-4">isto / isso / aquilo</h3>
+          <motion.div 
+            initial={{ scale: 0.9 }}
+            animate={{ scale: 1 }}
+            className="crayon-card text-purple-700 border-purple-500 bg-purple-50 p-10 shadow-2xl"
+          >
+            <h3 className="text-3xl font-bold mb-4">isto / isso / aquilo 🔮</h3>
             <p className="text-2xl font-display mb-2">不特定（中性）</p>
-            <p className="text-xl">不接名詞，單獨使用！</p>
-            <p className="mt-4 text-lg opacity-70 italic">「這件事、那個東西、那種情況」</p>
-          </div>
+            <p className="text-xl">不接名詞，單獨使用！ 🚫📖</p>
+            <p className="mt-4 text-lg opacity-70 italic">「這件事、那個東西、那種情況」 ✨</p>
+          </motion.div>
 
           <motion.div 
-            animate={{ scale: [1, 1.1, 1] }}
+            animate={{ 
+              scale: [1, 1.1, 1],
+              rotate: [0, 2, -2, 0]
+            }}
             transition={{ repeat: Infinity, duration: 1.5 }}
-            className="inline-block bg-yellow-400 text-white px-10 py-5 rounded-full font-bold text-2xl shadow-xl crayon-border border-yellow-600 flex items-center gap-3 mx-auto"
+            className="inline-block bg-yellow-400 text-white px-10 py-5 rounded-full font-bold text-2xl shadow-xl crayon-border border-yellow-600 flex items-center gap-3 mx-auto cursor-pointer"
+            onClick={() => confetti({ particleCount: 150, spread: 100, origin: { y: 0.6 } })}
           >
-            <Star fill="white" size={32} /> 訓練家等級提升！
+            <Star fill="white" size={32} /> 訓練家等級提升！ 🏆✨
           </motion.div>
         </div>
       )
@@ -428,24 +506,62 @@ export default function App() {
     }
   };
 
+  useEffect(() => {
+    if (currentStep === steps.length - 1) {
+      const duration = 5 * 1000;
+      const animationEnd = Date.now() + duration;
+      const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+      const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
+
+      const interval: any = setInterval(function() {
+        const timeLeft = animationEnd - Date.now();
+
+        if (timeLeft <= 0) {
+          return clearInterval(interval);
+        }
+
+        const particleCount = 50 * (timeLeft / duration);
+        confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
+        confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
+      }, 250);
+
+      return () => clearInterval(interval);
+    }
+  }, [currentStep, steps.length]);
+
   return (
-    <div className="min-h-screen paper-texture pb-24">
+    <div className="min-h-screen paper-texture pb-24 overflow-x-hidden">
+      {/* Background Floating Emojis */}
+      <FloatingEmoji emoji="🖍️" x={10} delay={0} />
+      <FloatingEmoji emoji="⚡" x={25} delay={2} />
+      <FloatingEmoji emoji="✨" x={45} delay={4} />
+      <FloatingEmoji emoji="🎨" x={65} delay={1} />
+      <FloatingEmoji emoji="🎒" x={85} delay={3} />
+      <FloatingEmoji emoji="🌟" x={95} delay={5} />
+
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-sm border-b-4 border-dashed border-slate-200 sticky top-0 z-10">
+      <header className="bg-white/80 backdrop-blur-sm border-b-4 border-dashed border-slate-200 sticky top-0 z-20">
         <div className="max-w-4xl mx-auto px-4 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="bg-orange-400 p-3 rounded-2xl crayon-border border-orange-600">
+            <motion.div 
+              whileHover={{ rotate: 360 }}
+              transition={{ duration: 0.5 }}
+              className="bg-orange-400 p-3 rounded-2xl crayon-border border-orange-600 shadow-md"
+            >
               <Pencil className="text-white" size={28} />
-            </div>
-            <h1 className="text-2xl font-display text-slate-800">蠟筆葡語教室</h1>
+            </motion.div>
+            <h1 className="text-2xl font-display text-slate-800 flex items-center gap-2">
+              蠟筆葡語教室 <Music size={20} className="text-pink-400 animate-bounce" />
+            </h1>
           </div>
           <div className="flex flex-col items-end">
-            <span className="text-lg font-crayon font-bold text-slate-500">
-              進度: {currentStep + 1} / {steps.length}
+            <span className="text-lg font-crayon font-bold text-slate-500 flex items-center gap-1">
+              進度: {currentStep + 1} / {steps.length} <Heart size={16} className="text-red-400 fill-red-400" />
             </span>
-            <div className="w-32 h-3 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
+            <div className="w-32 h-3 bg-slate-100 rounded-full overflow-hidden border border-slate-200 shadow-inner">
               <motion.div 
-                className="h-full bg-orange-400"
+                className="h-full bg-gradient-to-r from-orange-400 to-yellow-400"
                 initial={{ width: 0 }}
                 animate={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
               />
@@ -454,17 +570,26 @@ export default function App() {
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 py-10">
+      <main className="max-w-4xl mx-auto px-4 py-10 relative z-10">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentStep}
-            initial={{ opacity: 0, rotate: -1 }}
-            animate={{ opacity: 1, rotate: 0 }}
-            exit={{ opacity: 0, rotate: 1 }}
-            transition={{ duration: 0.4 }}
+            initial={{ opacity: 0, rotate: -2, scale: 0.95 }}
+            animate={{ opacity: 1, rotate: 0, scale: 1 }}
+            exit={{ opacity: 0, rotate: 2, scale: 0.95 }}
+            transition={{ duration: 0.4, type: "spring", stiffness: 100 }}
           >
-            <div className="mb-10 text-center">
-              <h2 className="text-4xl font-display text-indigo-600 mb-4">{steps[currentStep].title}</h2>
+            <div className="mb-10 text-center relative">
+              <h2 className="text-4xl font-display text-indigo-600 mb-4 inline-block relative">
+                {steps[currentStep].title}
+                <motion.div 
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ repeat: Infinity, duration: 2 }}
+                  className="absolute -top-6 -right-8 text-2xl"
+                >
+                  ✨
+                </motion.div>
+              </h2>
               <div className="hand-drawn-line text-indigo-300 max-w-xs mx-auto" />
             </div>
 
@@ -474,15 +599,15 @@ export default function App() {
       </main>
 
       {/* Navigation Footer */}
-      <footer className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t-4 border-dashed border-slate-200 p-5 shadow-2xl">
+      <footer className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t-4 border-dashed border-slate-200 p-5 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] z-20">
         <div className="max-w-4xl mx-auto flex items-center justify-between gap-4">
           <button
             onClick={prevStep}
             disabled={currentStep === 0}
-            className={`sketch-button flex items-center gap-2 text-xl ${
+            className={`sketch-button flex items-center gap-2 text-xl shadow-md ${
               currentStep === 0 
                 ? 'text-slate-300 border-slate-100 cursor-not-allowed' 
-                : 'text-slate-600 border-slate-300 hover:bg-slate-50'
+                : 'text-slate-600 border-slate-300 hover:bg-slate-50 active:bg-slate-100'
             }`}
           >
             <ChevronLeft size={24} /> 上一步
@@ -491,7 +616,7 @@ export default function App() {
           {currentStep < steps.length - 1 ? (
             <button
               onClick={nextStep}
-              className="sketch-button flex items-center gap-2 text-xl bg-indigo-600 text-white border-indigo-800 shadow-lg hover:bg-indigo-700"
+              className="sketch-button flex items-center gap-2 text-xl bg-indigo-600 text-white border-indigo-800 shadow-lg hover:bg-indigo-700 active:bg-indigo-800"
             >
               下一步 <ChevronRight size={24} />
             </button>
@@ -502,7 +627,7 @@ export default function App() {
                 setAnswers({});
                 setShowFeedback({});
               }}
-              className="sketch-button flex items-center gap-2 text-xl bg-emerald-600 text-white border-emerald-800 shadow-lg hover:bg-emerald-700"
+              className="sketch-button flex items-center gap-2 text-xl bg-emerald-600 text-white border-emerald-800 shadow-lg hover:bg-emerald-700 active:bg-emerald-800"
             >
               重新開始 <RotateCcw size={24} />
             </button>
